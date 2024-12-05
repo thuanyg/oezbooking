@@ -2,12 +2,20 @@ import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
 import 'package:oezbooking/core/apps/app_styles.dart';
+import 'package:oezbooking/core/utils/dialogs.dart';
 import 'package:oezbooking/core/utils/image_helper.dart';
+import 'package:oezbooking/core/utils/storage.dart';
 import 'package:oezbooking/features/events/presentation/page/event_screen.dart';
+import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
+import 'package:oezbooking/features/login/presentation/page/login_page.dart';
 import 'package:oezbooking/features/orders/presentation/page/orders_page.dart';
+import 'package:oezbooking/features/profile/my_profile_page.dart';
+import 'package:oezbooking/features/reviews/review_page.dart';
 import 'package:oezbooking/features/ticket_scanner/presentation/page/ticket_scanner_page.dart';
+import 'package:oezbooking/revenue/revenue_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -167,7 +175,7 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => OrdersPage(),
+                                builder: (context) => const OrdersPage(),
                               ),
                             );
                           },
@@ -176,25 +184,73 @@ class _HomePageState extends State<HomePage> {
                           icon: Icons.star,
                           label: 'Reviews',
                           notifications: 0,
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  const OrganizerReviewsPage(),
+                            ));
+                          },
                         ),
                         _buildMenuItem(
                           icon: Icons.monetization_on_outlined,
                           label: 'Revenue',
                           notifications: 0,
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RevenueAnalyticsPage(),
+                                ));
+                          },
                         ),
                         _buildMenuItem(
-                          icon: Icons.headset_mic,
-                          label: 'Help Center',
+                          icon: Icons.person,
+                          label: 'My Profile',
                           notifications: 0,
-                          onTap: () {},
+                          onTap: () {
+                            final bloc = BlocProvider.of<LoginBloc>(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => OrganizerProfilePage(
+                                  organizer: bloc.organizer!,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                         _buildMenuItem(
-                          icon: Icons.group,
-                          label: 'Management',
-                          notifications: 1,
-                          onTap: () {},
+                          icon: Icons.logout,
+                          label: 'Sign Out',
+                          notifications: 0,
+                          onTap: () async {
+                            DialogUtils.showConfirmationDialog(
+                              context: context,
+                              labelTitle: "Logout",
+                              title: "Are you sure you want to log out?",
+                              textCancelButton: "Cancel",
+                              textAcceptButton: "Logout",
+                              cancelPressed: () => Navigator.pop(context),
+                              acceptPressed: () async {
+                                DialogUtils.showLoadingDialog(context);
+                                await Future.delayed(
+                                    const Duration(milliseconds: 800));
+                                final loginBloc =
+                                    BlocProvider.of<LoginBloc>(context);
+                                loginBloc.organizer = null;
+
+                                await PreferencesUtils.deleteValue(
+                                    loginSessionKey);
+
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginPage(),
+                                  ),
+                                  (route) => false,
+                                );
+                              },
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -241,6 +297,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildMenuItem({
     required IconData icon,
     required String label,
+    bool isEnable = true,
     required int notifications,
     required VoidCallback onTap,
   }) {
@@ -254,8 +311,8 @@ class _HomePageState extends State<HomePage> {
               child: Container(
                 padding: const EdgeInsets.all(12.0),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8.0),
+                  color: isEnable ? Colors.white : Colors.blueGrey,
+                  borderRadius: BorderRadius.circular(3.0),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withOpacity(0.2),
@@ -273,7 +330,7 @@ class _HomePageState extends State<HomePage> {
                 right: -5,
                 top: -5,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: AppColors.primaryColor,
                     shape: BoxShape.circle,
@@ -282,7 +339,7 @@ class _HomePageState extends State<HomePage> {
                     notifications.toString(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -294,7 +351,7 @@ class _HomePageState extends State<HomePage> {
           label,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: Colors.white,
           ),
         ),

@@ -233,25 +233,29 @@ class EventPreview extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: Colors.grey[600]),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              content,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 2),
+              Text(
+                content,
+                maxLines: 2,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

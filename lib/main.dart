@@ -1,11 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
+import 'package:oezbooking/core/utils/storage.dart';
 import 'package:oezbooking/features/events/presentation/bloc/event_bloc.dart';
 import 'package:oezbooking/features/home/presentation/page/home_page.dart';
+import 'package:oezbooking/features/login/data/model/organizer.dart';
 import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
+import 'package:oezbooking/features/login/presentation/page/login_page.dart';
 import 'package:oezbooking/features/orders/presentation/bloc/order_bloc.dart';
+import 'package:oezbooking/features/splash/splash_page.dart';
 import 'package:oezbooking/features/ticket_scanner/presentation/bloc/fetch_ticket_bloc.dart';
 import 'package:oezbooking/features/ticket_scanner/presentation/bloc/update_ticket_bloc.dart';
 import 'package:oezbooking/firebase_options.dart';
@@ -34,6 +40,8 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,7 +52,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.backgroundColor,
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home: const SplashPage(),
     );
   }
 }

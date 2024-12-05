@@ -1,8 +1,12 @@
-import 'dart:math';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
 import 'package:oezbooking/core/utils/dialogs.dart';
+import 'package:oezbooking/core/utils/function_utils.dart';
+import 'package:oezbooking/core/utils/image_helper.dart';
 import 'package:oezbooking/features/events/data/model/event.dart';
 
 enum ActionType { create, update, read, delete }
@@ -11,9 +15,14 @@ class EditEvent extends StatefulWidget {
   final Event? event;
   final Function(Event) onSave;
   final ActionType actionType;
+  final VoidCallback onClose;
 
   const EditEvent(
-      {super.key, this.event, required this.onSave, required this.actionType});
+      {super.key,
+      this.event,
+      required this.onSave,
+      required this.actionType,
+      required this.onClose});
 
   @override
   _EditEventState createState() => _EditEventState();
@@ -34,12 +43,12 @@ class _EditEventState extends State<EditEvent> {
   late DateTime selectedDate;
 
   List<String> imageUrls = [];
+  ValueNotifier<List<File>> imageUrlsSelect = ValueNotifier<List<File>>([]);
 
   @override
   void initState() {
     super.initState();
     final event = widget.event;
-
     // Initialize controllers with existing event data or empty strings
     nameController = TextEditingController(text: event?.name ?? '');
     locationController = TextEditingController(text: event?.location ?? '');
@@ -73,23 +82,18 @@ class _EditEventState extends State<EditEvent> {
     posterController.dispose();
     videoUrlController.dispose();
     additionalInfoController.dispose();
+    imageUrlsSelect.dispose();
+    imageUrls = [];
     super.dispose();
   }
 
+
   void _handleSave() async {
     DialogUtils.showLoadingDialog(context);
-    await Future.delayed(const Duration(milliseconds: 800));
-    const _chars =
-        'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-    Random _rnd = Random();
-
-    String getRandomString(int length) =>
-        String.fromCharCodes(Iterable.generate(
-            length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
-
+    await uploadFilesToFirebase(imageUrlsSelect.value);
     if (_formKey.currentState!.validate()) {
       final event = Event(
-        id: widget.event?.id ?? getRandomString(6),
+        id: widget.event?.id ?? generateRandomId(6),
         name: nameController.text,
         location: locationController.text,
         eventType: eventTypeController.text,
@@ -110,13 +114,76 @@ class _EditEventState extends State<EditEvent> {
         geoPoint: widget.event?.geoPoint,
         isDelete: false,
       );
-
       widget.onSave(event);
+    }
+  }
+
+  Future<void> pickImages() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.image,
+      );
+
+      if (result != null) {
+        // Lọc danh sách các file đã chọn
+        List<File> validImages = result.paths
+            .where((path) => path != null && _isValidImageExtension(path))
+            .map((path) => File(path!))
+            .toList();
+
+        imageUrlsSelect.value = [...imageUrlsSelect.value, ...validImages];
+        imageUrlsSelect.notifyListeners();
+
+        if (imageUrlsSelect.value.isEmpty) {
+          print("No valid images selected!");
+        }
+      }
+      print(imageUrlsSelect.value.length);
+    } catch (e) {
+      print("Error picking images: $e");
+    }
+  }
+
+  bool _isValidImageExtension(String? path) {
+    if (path == null) return false;
+    final validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+    final extension = path.split('.').last.toLowerCase();
+    return validExtensions.contains(extension);
+  }
+
+  Future<void> uploadFilesToFirebase(List<File> files) async {
+    List<String> uploadedImageUrls = [];
+
+    try {
+      for (File file in files) {
+        // Tạo tên file ngẫu nhiên để tránh trùng lặp
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+        // Tham chiếu Firebase Storage
+        Reference storageRef =
+            FirebaseStorage.instance.ref().child('images/events/$fileName');
+
+        // Tải lên file
+        UploadTask uploadTask = storageRef.putFile(file);
+        TaskSnapshot snapshot = await uploadTask;
+
+        // Lấy URL tải xuống
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+        uploadedImageUrls.add(downloadUrl);
+      }
+
+      imageUrls = [...imageUrls, ...uploadedImageUrls];
+
+      print("Upload completed. URLs: $uploadedImageUrls");
+    } catch (e) {
+      print("Error uploading files: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    print(imageUrls.length);
     return Container(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -135,7 +202,7 @@ class _EditEventState extends State<EditEvent> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => widget.onClose(),
                     tooltip: 'Close',
                   ),
                 ],
@@ -219,19 +286,19 @@ class _EditEventState extends State<EditEvent> {
               ),
 
               // Media Section
-              _buildSectionTitle('Media'),
-              _buildTextFormField(
-                controller: thumbnailController,
-                label: 'Thumbnail URL',
-              ),
-              _buildTextFormField(
-                controller: posterController,
-                label: 'Poster URL',
-              ),
-              _buildTextFormField(
-                controller: videoUrlController,
-                label: 'Video URL',
-              ),
+              // _buildSectionTitle('Media'),
+              // _buildTextFormField(
+              //   controller: thumbnailController,
+              //   label: 'Thumbnail URL',
+              // ),
+              // _buildTextFormField(
+              //   controller: posterController,
+              //   label: 'Poster URL',
+              // ),
+              // _buildTextFormField(
+              //   controller: videoUrlController,
+              //   label: 'Video URL',
+              // ),
 
               // Image URLs Section
               _buildImageUrlsList(),
@@ -242,7 +309,7 @@ class _EditEventState extends State<EditEvent> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => widget.onClose(),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 16),
@@ -361,65 +428,109 @@ class _EditEventState extends State<EditEvent> {
   }
 
   Widget _buildImageUrlsList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Image URLs'),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+    return ValueListenableBuilder(
+      valueListenable: imageUrlsSelect,
+      builder: (context, value, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ...imageUrls.map((url) => Chip(
-                  color: const WidgetStatePropertyAll(Colors.grey),
-                  label: Text(
-                    url,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  onDeleted: () {
-                    setState(() {
-                      imageUrls.remove(url);
-                    });
+            const Text('Images'),
+            const SizedBox(height: 8),
+            if (widget.event != null)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.event!.imageUrls.map(
+                  (imageUrl) {
+                    return Stack(
+                      children: [
+                        Container(
+                          height: 100,
+                          width: 130,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          child: ImageHelper.loadNetworkImage(imageUrl),
+                        ),
+                        Positioned(
+                          right: -14,
+                          top: -14,
+                          child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                imageUrls.removeWhere((img) => img == imageUrl);
+                              });
+                            },
+                            icon: Icon(
+                              Icons.remove_circle,
+                              size: 20,
+                              color: AppColors.primaryColor,
+                            ),
+                          ),
+                        )
+                      ],
+                    );
                   },
-                )),
-            ActionChip(
-              color: const WidgetStatePropertyAll(Colors.white),
-              label: const Text('Add Image URL'),
-              onPressed: () async {
-                final controller = TextEditingController();
-                final result = await showDialog<String>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Add Image URL'),
-                    content: TextField(
-                      controller: controller,
-                      decoration: const InputDecoration(
-                        labelText: 'Image URL',
+                ).toList(),
+              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: value.map(
+                (file) {
+                  return Stack(
+                    children: [
+                      Container(
+                        height: 100,
+                        width: 130,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 4,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            file,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () =>
-                            Navigator.of(context).pop(controller.text),
-                        child: const Text('Add'),
+                      Positioned(
+                        right: -20,
+                        top: -10,
+                        child: IconButton(
+                          onPressed: () {
+                            imageUrlsSelect.value.removeWhere((f) => f == file);
+                            imageUrlsSelect.notifyListeners();
+                          },
+                          icon: Icon(
+                            Icons.remove_circle,
+                            size: 20,
+                            color: AppColors.primaryColor,
+                          ),
+                        ),
                       ),
                     ],
-                  ),
-                );
-                if (result != null && result.isNotEmpty) {
-                  setState(() {
-                    imageUrls.add(result);
-                  });
-                }
+                  );
+                },
+              ).toList(),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () async {
+                await pickImages();
               },
+              child: Text(
+                "Add new images",
+                style: TextStyle(
+                  color: AppColors.primaryColor,
+                ),
+              ),
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }

@@ -254,14 +254,13 @@ class _TicketScannerPageState extends State<TicketScannerPage>
     try {
       String qrCodeData =
           EncryptionHelper.decryptData(code, EncryptionHelper.secretKey);
-      // Assuming data format: ticketId=NH5SyPBA&orderId=zq2SrD&eventId=science_fair_2024
       // Extract parameters from the decrypted string
       Map<String, String> params = Uri.splitQueryString(qrCodeData);
 
       // Access individual parameters
       String? ticketId = params['ticketId'];
-      String? orderId = params['orderId'];
-      String? eventId = params['eventId'];
+      // String? orderId = params['orderId'];
+      // String? eventId = params['eventId'];
 
       if (ticketId == null) {
         await _showErrorModal(code,

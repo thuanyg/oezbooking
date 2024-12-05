@@ -1,9 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:oezbooking/core/utils/dialogs.dart';
 import 'package:oezbooking/core/utils/image_helper.dart';
+import 'package:oezbooking/core/utils/storage.dart';
 import 'package:oezbooking/core/utils/vadilator.dart';
 import 'package:oezbooking/features/home/presentation/page/home_page.dart';
+import 'package:oezbooking/features/login/data/model/organizer.dart';
 import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
 import 'package:oezbooking/features/login/presentation/bloc/login_event.dart';
 import 'package:oezbooking/features/login/presentation/bloc/login_state.dart';
@@ -49,72 +52,79 @@ class _LoginPageState extends State<LoginPage> {
         child: Form(
           key: _loginFormKey,
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 100),
-                ImageHelper.loadAssetImage(
-                  'assets/images/ic_launcher.png',
-                  height: 78,
-                ),
-                const SizedBox(height: 48.0),
-                CustomInputField(
-                  controller: _emailController,
-                  label: "abc@email.com",
-                  prefixIconName: "ic_email_outlined.png",
-                  validator: Validator.validateEmail,
-                ),
-                const SizedBox(height: 18.0),
-                CustomInputField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  label: "Your password",
-                  prefixIconName: "ic_lock_outlined.png",
-                  validator: Validator.validatePassword,
-                ),
-                const SizedBox(height: 8.0),
-                const SizedBox(height: 28.0),
-                BlocBuilder<LoginBloc, LoginState>(
-                  builder: (context, state) {
-                    if (state is LoginFailed) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        DialogUtils.hide(context);
-                      });
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            state.error,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.redAccent,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 70),
+                  ImageHelper.loadAssetImage(
+                    'assets/images/img_logo.png',
+                    height: 40,
+                    tintColor: Colors.white70,
+                  ),
+                  const SizedBox(height: 150.0),
+                  CustomInputField(
+                    controller: _emailController,
+                    label: "abc@email.com",
+                    prefixIconName: "ic_email_outlined.png",
+                    validator: Validator.validateEmail,
+                  ),
+                  const SizedBox(height: 18.0),
+                  CustomInputField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    label: "Your password",
+                    prefixIconName: "ic_lock_outlined.png",
+                    validator: Validator.validatePassword,
+                  ),
+                  const SizedBox(height: 8.0),
+                  const SizedBox(height: 28.0),
+                  BlocBuilder<LoginBloc, LoginState>(
+                    builder: (context, state) {
+                      if (state is LoginFailed) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          DialogUtils.hide(context);
+                        });
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(
+                              state.error,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }
-
-                    if (state is LoginSuccess) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        DialogUtils.hide(context);
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomePage(),
-                          ),
-                          (Route<dynamic> route) => false,
                         );
-                      });
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                MainElevatedButton(
-                  text: "LOGIN",
-                  onTap: () => handleLogin(context),
-                ),
-                const SizedBox(height: 300.0),
-              ],
+                      }
+
+                      if (state is LoginSuccess) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          DialogUtils.hide(context);
+                          if (state.organizer.id != null) {
+                            await PreferencesUtils.saveString(
+                                loginSessionKey, state.organizer.id!);
+                          }
+
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HomePage(),
+                            ),
+                            (Route<dynamic> route) => false,
+                          );
+                        });
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  MainElevatedButton(
+                    text: "LOGIN",
+                    onTap: () => handleLogin(context),
+                  ),
+                  const SizedBox(height: 300.0),
+                ],
+              ),
             ),
           ),
         ),
@@ -156,4 +166,6 @@ class _LoginPageState extends State<LoginPage> {
       loginBloc.add(PressedLogin(email, password));
     }
   }
+
+
 }

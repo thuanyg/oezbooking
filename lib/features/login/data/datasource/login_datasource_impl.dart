@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:oezbooking/core/utils/encryption_helper.dart';
 import 'package:oezbooking/features/login/data/datasource/login_datasource.dart';
 import 'package:oezbooking/features/login/data/model/organizer.dart';
 
@@ -11,16 +13,25 @@ class LoginDatasourceImpl extends LoginDatasource {
     final docs = await firebaseFirestore
         .collection("organizers")
         .where("email", isEqualTo: email)
-        .where("passwordHash", isEqualTo: password)
         .limit(1)
         .get();
+
     if (docs.docs.isNotEmpty) {
-      // Extract the document and map it to the Organizer model.
       final doc = docs.docs.first;
-      return Organizer.fromJson(doc.data());
-    } else {
-      // Return null if no matching organizer was found.
-      return null;
+      final data = doc.data();
+
+      // Lấy hash mật khẩu từ Firestore
+      final passwordHash = data['passwordHash'] as String;
+
+      final passwordDecrypted = EncryptionHelper.decryptData(
+        passwordHash,
+        EncryptionHelper.secretKey,
+      );
+
+      if (passwordDecrypted != password) {
+        return Organizer.fromJson(data);
+      }
     }
+    return null;
   }
 }

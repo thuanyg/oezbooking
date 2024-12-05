@@ -4,3 +4,9 @@ class FetchOrderList extends OrderEvent{
 
   FetchOrderList(this.organizerID);
 }
+
+class SearchOrder extends OrderEvent {
+  final String query;
+
+  SearchOrder(this.query);
+}

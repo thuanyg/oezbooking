@@ -38,6 +38,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
       validator: widget.validator,
       obscureText: widget.obscureText,
       cursorErrorColor: Colors.red,
+      style: const TextStyle(color: Colors.white70),
       decoration: InputDecoration(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -49,7 +50,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
             ? ImageHelper.loadAssetImage(
                 "assets/images/${widget.prefixIconName!}",
                 height: 14,
-                tintColor: Colors.black54,
+                tintColor: Colors.white54,
               )
             : null,
         suffixIcon: obscureText
@@ -57,11 +58,11 @@ class _CustomInputFieldState extends State<CustomInputField> {
                 icon: isPasswordShowed
                     ? const Icon(
                         Icons.visibility_off_outlined,
-                        color: Colors.black54,
+                        color: Colors.white54,
                       )
                     : const Icon(
                         Icons.visibility_outlined,
-                        color: Colors.black54,
+                        color: Colors.white54,
                       ),
                 onPressed: () {
                   setState(() {
@@ -78,7 +79,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
             : const SizedBox.shrink(),
         label: Text(
           widget.label!,
-          style: AppStyle.boxFieldLabel,
+          style: AppStyle.boxFieldLabel.copyWith(color: Colors.white70),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
 import 'package:oezbooking/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:oezbooking/features/orders/presentation/bloc/order_event.dart';
 import 'package:oezbooking/features/orders/presentation/bloc/order_state.dart';
@@ -16,12 +17,14 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersPageState extends State<OrdersPage> {
   late OrderBloc orderBloc;
+  late LoginBloc loginBloc;
 
   @override
   void initState() {
     super.initState();
     orderBloc = BlocProvider.of<OrderBloc>(context);
-    orderBloc.add(FetchOrderList("e90c0b70-a877-11ef-a202-492025bde1a9"));
+    loginBloc = BlocProvider.of<LoginBloc>(context);
+    orderBloc.add(FetchOrderList(loginBloc.organizer?.id ?? ""));
   }
 
   @override
@@ -29,6 +32,7 @@ class _OrdersPageState extends State<OrdersPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1F25),
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: const Color(0xFF1A1F25),
         foregroundColor: Colors.white,
         title: const Text(
@@ -55,36 +59,22 @@ class _OrdersPageState extends State<OrdersPage> {
   Widget _buildFilterSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search orders...',
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: const Color(0xFF272D36),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
+      child: TextField(
+        onChanged: (value) {
+          orderBloc.add(SearchOrder(value.toLowerCase().trim()));
+        },
+        decoration: InputDecoration(
+          hintText: 'Search orders...',
+          hintStyle: TextStyle(color: Colors.grey[400]),
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          filled: true,
+          fillColor: const Color(0xFF272D36),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
-          const SizedBox(width: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF272D36),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.filter_list, color: Colors.white),
-              onPressed: () {},
-            ),
-          ),
-        ],
+        ),
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }

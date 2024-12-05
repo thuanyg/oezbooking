@@ -20,6 +20,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         backgroundColor: const Color(0xFF1A1F25),
         foregroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text(
           'Order Details',
           style: TextStyle(
@@ -27,14 +28,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.white),
-            onPressed: () {
-              // Implement share functionality
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -44,7 +37,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             _buildCustomerInfo(),
             _buildTicketDetails(),
             _buildPaymentInfo(),
-            _buildActionButtons(),
+            // _buildActionButtons(),
           ],
         ),
       ),

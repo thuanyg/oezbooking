@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
@@ -19,16 +18,25 @@ class EventScreen extends StatefulWidget {
   State<EventScreen> createState() => _EventScreenState();
 }
 
-class _EventScreenState extends State<EventScreen> {
+class _EventScreenState extends State<EventScreen>
+    with SingleTickerProviderStateMixin {
   late EventBloc eventBloc;
   late LoginBloc loginBloc;
+  late TabController _tabController;
 
   @override
   void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     eventBloc = BlocProvider.of<EventBloc>(context);
     loginBloc = BlocProvider.of<LoginBloc>(context);
-    eventBloc.add(FetchEvents("e90c0b70-a877-11ef-a202-492025bde1a9"));
-    super.initState();
+    eventBloc.add(FetchEvents(loginBloc.organizer?.id ?? ""));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -57,24 +65,35 @@ class _EventScreenState extends State<EventScreen> {
               ),
               const Spacer(),
               IconButton(
-                onPressed: () {
-                  showCreateEventDialog();
-                },
+                onPressed: showCreateEventDialog,
                 icon: const Icon(Icons.add),
                 color: Colors.white70,
               ),
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        TabBar(
+          labelStyle: const TextStyle(
+            color: Colors.white70,
+          ),
+          indicatorSize: TabBarIndicatorSize.label,
+          dividerHeight: .5,
+          dividerColor: Colors.transparent,
+          indicatorColor: Colors.grey,
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Upcoming Events'),
+            Tab(text: 'Past Events'),
+          ],
+        ),
         Expanded(
           child: BlocBuilder(
             bloc: eventBloc,
             builder: (context, state) {
-              if(state is EventActionSuccess){
+              if (state is EventActionSuccess) {
                 DialogUtils.hide(context);
                 DialogUtils.hide(context);
-                eventBloc.add(FetchEvents("e90c0b70-a877-11ef-a202-492025bde1a9"));
+                eventBloc.add(FetchEvents(loginBloc.organizer?.id ?? ""));
               }
               if (state is EventLoading) {
                 return const Center(
@@ -82,30 +101,23 @@ class _EventScreenState extends State<EventScreen> {
                 );
               }
               if (state is EventsLoaded) {
-                return ListView.builder(
-                  itemCount: state.events.length,
-                  itemBuilder: (context, index) {
-                    return EventCard(
-                      event: state.events[index],
-                      onView: () => showEventPreview(state.events[index]),
-                      onEdit: () => showEditEventDialog(state.events[index]),
-                      onDelete: () {
-                        DialogUtils.showConfirmationDialog(
-                          cancelPressed: () {},
-                          context: context,
-                          title: "Are you sure you want to delete this event?",
-                          textCancelButton: "Cancel",
-                          textAcceptButton: "Delete",
-                          acceptPressed: () {
-                            DialogUtils.showLoadingDialog(context);
-                            final eventUpdate = state.events[index];
-                            eventUpdate.isDelete = true;
-                            eventBloc.add(UpdateEvent(eventUpdate));
-                          },
-                        );
-                      },
-                    );
-                  },
+                // Separate upcoming and past events
+                final now = DateTime.now();
+                final upcomingEvents = state.events
+                    .where((event) => event.date.isAfter(now))
+                    .toList();
+                final pastEvents = state.events
+                    .where((event) => event.date.isBefore(now))
+                    .toList();
+
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Upcoming Events Tab
+                    _buildEventList(upcomingEvents),
+                    // Past Events Tab
+                    _buildEventList(pastEvents),
+                  ],
                 );
               }
               if (state is EventError) {
@@ -124,9 +136,37 @@ class _EventScreenState extends State<EventScreen> {
     );
   }
 
-  void showEditEventDialog(Event event) {
+  Widget _buildEventList(List<Event> events) {
+    return ListView.builder(
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        return EventCard(
+          event: events[index],
+          onView: () async => showEventPreview(events[index]),
+          onEdit: () async => showEditEventDialog(events[index]),
+          onDelete: () {
+            DialogUtils.showConfirmationDialog(
+              cancelPressed: () => Navigator.pop(context),
+              context: context,
+              title: "Are you sure you want to delete this event?",
+              textCancelButton: "Cancel",
+              textAcceptButton: "Delete",
+              acceptPressed: () {
+                DialogUtils.showLoadingDialog(context);
+                final eventUpdate = events[index];
+                eventUpdate.isDelete = true;
+                eventBloc.add(UpdateEvent(eventUpdate));
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  showEditEventDialog(Event event) async {
     final size = MediaQuery.of(context).size;
-    showGeneralDialog(
+    await showGeneralDialog(
       context: context,
       barrierLabel: '',
       barrierDismissible: false,
@@ -154,6 +194,7 @@ class _EventScreenState extends State<EventScreen> {
                   child: EditEvent(
                     actionType: ActionType.update,
                     event: event,
+                    onClose: () => Navigator.pop(context),
                     onSave: (event) async {
                       eventBloc.add(UpdateEvent(event));
                     },
@@ -167,9 +208,9 @@ class _EventScreenState extends State<EventScreen> {
     );
   }
 
-  void showEventPreview(Event event) {
+  Future<void> showEventPreview(Event event) async {
     final size = MediaQuery.of(context).size;
-    showGeneralDialog(
+    await showGeneralDialog(
       context: context,
       barrierLabel: '',
       barrierDismissible: true,
@@ -235,6 +276,7 @@ class _EventScreenState extends State<EventScreen> {
                   ),
                   child: EditEvent(
                     actionType: ActionType.create,
+                    onClose: () => Navigator.pop(context),
                     onSave: (event) {
                       eventBloc.add(CreateEvent(event));
                     },
@@ -247,5 +289,4 @@ class _EventScreenState extends State<EventScreen> {
       },
     );
   }
-
 }

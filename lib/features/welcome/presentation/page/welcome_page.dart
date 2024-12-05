@@ -3,6 +3,7 @@ import 'package:oezbooking/core/apps/app_colors.dart';
 import 'package:oezbooking/core/apps/app_styles.dart';
 import 'package:oezbooking/core/utils/dialogs.dart';
 import 'package:oezbooking/core/utils/image_helper.dart';
+import 'package:oezbooking/core/utils/storage.dart';
 import 'package:oezbooking/features/login/presentation/page/login_page.dart';
 import 'package:oezbooking/features/login/presentation/widgets/main_button.dart';
 
@@ -31,13 +32,12 @@ class WelcomePage extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       "EventMaster",
-                      style: AppStyle.heading1.copyWith(color: Colors.black87),
+                      style: AppStyle.heading1,
                     ),
                     Text(
                       textAlign: TextAlign.center,
                       "Efficiently manage personal events with ease",
                       style: AppStyle.heading2.copyWith(
-                        color: Colors.black87,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -48,7 +48,8 @@ class WelcomePage extends StatelessWidget {
             ),
             MainElevatedButton(
               text: "Get started",
-              onTap: () {
+              onTap: () async {
+                await PreferencesUtils.saveBool("isFirstRun", false);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -77,7 +78,7 @@ class WelcomePage extends StatelessWidget {
                 child: const Text(
                   "Create an account",
                   style: TextStyle(
-                    color: Colors.black,
+                    color: Colors.white60,
                     fontWeight: FontWeight.w600,
                     fontSize: 18,
                   ),
