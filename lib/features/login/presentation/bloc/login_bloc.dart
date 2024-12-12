@@ -12,8 +12,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<PressedLogin>(
       (event, emit)async {
         emit(LoginLoading());
-        String passwordDecrypted = EncryptionHelper.encryptData(event.password, EncryptionHelper.secretKey);
-        final organizer = await loginUseCase(event.email, passwordDecrypted);
+        final organizer = await loginUseCase(event.email, event.password);
         if(organizer != null){
           this.organizer = organizer;
           emit(LoginSuccess(organizer));
@@ -22,5 +21,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         }
       },
     );
+  }
+
+  void reset(){
+    organizer = null;
+    emit(LoginInitial());
   }
 }

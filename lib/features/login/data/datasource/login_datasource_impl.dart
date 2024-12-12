@@ -10,28 +10,32 @@ class LoginDatasourceImpl extends LoginDatasource {
   @override
   Future<Organizer?> loginWithEmailAndPassword(
       String email, String password) async {
-    final docs = await firebaseFirestore
-        .collection("organizers")
-        .where("email", isEqualTo: email)
-        .limit(1)
-        .get();
+    try {
+      final docs = await firebaseFirestore
+          .collection("organizers")
+          .where("email", isEqualTo: email)
+          .limit(1)
+          .get();
 
-    if (docs.docs.isNotEmpty) {
-      final doc = docs.docs.first;
-      final data = doc.data();
+      if (docs.docs.isNotEmpty) {
+        final doc = docs.docs.first;
+        final data = doc.data();
 
-      // Lấy hash mật khẩu từ Firestore
-      final passwordHash = data['passwordHash'] as String;
+        // Lấy hash mật khẩu từ Firestore
+        final passwordHash = data['passwordHash'] as String;
 
-      final passwordDecrypted = EncryptionHelper.decryptData(
-        passwordHash,
-        EncryptionHelper.secretKey,
-      );
-
-      if (passwordDecrypted != password) {
-        return Organizer.fromJson(data);
+        final passwordDecrypted = EncryptionHelper.decryptData(
+          passwordHash,
+          EncryptionHelper.secretKey,
+        );
+print(passwordDecrypted);
+        if (passwordDecrypted == password) {
+          return Organizer.fromJson(data);
+        }
       }
+      return null;
+    } on Exception catch (e) {
+      rethrow;
     }
-    return null;
   }
 }

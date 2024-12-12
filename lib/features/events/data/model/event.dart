@@ -5,6 +5,7 @@ class Event {
   String name;
   String location;
   String eventType;
+  String category;
   String description;
   DateTime date; // Keep this as DateTime
   double ticketPrice;
@@ -24,6 +25,7 @@ class Event {
     required this.eventType,
     required this.description,
     required this.date,
+    required this.category,
     required this.ticketPrice,
     this.thumbnail,
     this.poster,
@@ -40,6 +42,7 @@ class Event {
   factory Event.fromJson(Map<String, dynamic> map, {String? id}) {
     return Event(
       id: map['id'],
+      category: map['category'] as String,
       name: map['name'] ?? '',
       location: map['location'] ?? '',
       eventType: map['eventType'] ?? '',
@@ -67,7 +70,7 @@ class Event {
       'location': location,
       'eventType': eventType,
       'description': description,
-      'date': Timestamp.fromDate(date.toUtc().add(const Duration(hours: 7))),
+      'date': Timestamp.fromDate(date.toUtc()),
       // Convert DateTime to Firestore Timestamp
       'ticketPrice': ticketPrice,
       'availableTickets': availableTickets,
@@ -79,6 +82,7 @@ class Event {
       'organizer': organizer,
       'geopoint': geoPoint,
       'isDelete': isDelete,
+      'category': category,
     };
   }
 }

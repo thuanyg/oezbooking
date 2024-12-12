@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:oezbooking/core/utils/dialogs.dart';
@@ -104,6 +105,14 @@ class _LoginPageState extends State<LoginPage> {
                           if (state.organizer.id != null) {
                             await PreferencesUtils.saveString(
                                 loginSessionKey, state.organizer.id!);
+
+                            String? token =
+                                await FirebaseMessaging.instance.getToken();
+
+                            await FirebaseFirestore.instance
+                                .collection("organizers")
+                                .doc(state.organizer.id)
+                                .update({"fcmToken": token});
                           }
 
                           Navigator.pushAndRemoveUntil(
@@ -166,6 +175,4 @@ class _LoginPageState extends State<LoginPage> {
       loginBloc.add(PressedLogin(email, password));
     }
   }
-
-
 }

@@ -8,6 +8,7 @@ import 'package:oezbooking/core/utils/function_utils.dart';
 import 'package:oezbooking/features/events/presentation/bloc/event_bloc.dart';
 import 'package:oezbooking/features/events/presentation/bloc/event_event.dart';
 import 'package:oezbooking/features/events/presentation/bloc/event_state.dart';
+import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
 import 'package:oezbooking/features/login/presentation/widgets/main_button.dart';
 import 'package:oezbooking/features/ticket_scanner/data/model/ticket.dart';
 import 'package:oezbooking/features/ticket_scanner/presentation/bloc/update_ticket_bloc.dart';
@@ -28,12 +29,16 @@ class _TicketScannerResultState extends State<TicketScannerResult> {
   late EventBloc eventBloc;
   late UpdateTicketBloc updateTicketBloc;
   late Ticket ticket;
+  late LoginBloc loginBloc;
+
+  ValueNotifier<bool> checkOrganizer = ValueNotifier(true);
 
   @override
   void initState() {
     super.initState();
     ticket = widget.ticket;
     updateTicketBloc = BlocProvider.of<UpdateTicketBloc>(context);
+    loginBloc = BlocProvider.of<LoginBloc>(context);
     eventBloc = BlocProvider.of<EventBloc>(context);
     eventBloc.add(FetchEvent(widget.ticket.eventID));
   }
@@ -96,7 +101,21 @@ class _TicketScannerResultState extends State<TicketScannerResult> {
                 const SizedBox(height: 16),
                 _buildEventDetails(),
                 const SizedBox(height: 24),
-                _buildActionButton(ticket),
+                ValueListenableBuilder(
+                  valueListenable: checkOrganizer,
+                  builder: (context, value, child) {
+                    if (value == true) {
+                      return _buildActionButton(ticket);
+                    }
+                    return const Text(
+                      "Vé sự kiện không thuộc quản lý của bạn!",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  },
+                )
               ],
             );
           },
@@ -217,10 +236,17 @@ class _TicketScannerResultState extends State<TicketScannerResult> {
   }
 
   Widget _buildEventDetails() {
-    return BlocBuilder(
+    return BlocConsumer(
+      listener: (context, state) {
+        if (state is EventLoaded) {
+          checkOrganizer.value =
+              state.event.organizer == loginBloc.organizer?.id;
+        }
+      },
       bloc: eventBloc,
       builder: (context, state) {
         if (state is EventLoaded) {
+          // Check
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -258,6 +284,7 @@ class _TicketScannerResultState extends State<TicketScannerResult> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -266,12 +293,19 @@ class _TicketScannerResultState extends State<TicketScannerResult> {
               fontSize: 15,
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 15,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 15,
+                ),
+              ),
             ),
           )
         ],

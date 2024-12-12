@@ -169,14 +169,14 @@ class _EventScreenState extends State<EventScreen>
     await showGeneralDialog(
       context: context,
       barrierLabel: '',
-      barrierDismissible: false,
+      barrierDismissible: true,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Container(
-          height: size.height * 0.8,
+          height: size.height * 0.85,
           width: size.width,
           margin: const EdgeInsets.symmetric(horizontal: 8),
           child: Align(
-            alignment: Alignment.center,
+            alignment: Alignment.bottomCenter,
             child: Material(
               color: Colors.transparent,
               child: Container(
@@ -216,10 +216,10 @@ class _EventScreenState extends State<EventScreen>
       barrierDismissible: true,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Container(
-          height: size.height * 0.8,
+          height: size.height * 0.85,
           width: size.width,
           child: Align(
-            alignment: Alignment.center,
+            alignment: Alignment.bottomCenter,
             child: Material(
               color: Colors.transparent,
               child: Container(
@@ -252,14 +252,14 @@ class _EventScreenState extends State<EventScreen>
     showGeneralDialog(
       context: context,
       barrierLabel: '',
-      barrierDismissible: false,
+      barrierDismissible: true,
       pageBuilder: (context, animation, secondaryAnimation) {
         return Container(
-          height: size.height * 0.8,
+          height: size.height * 0.85,
           width: size.width,
           margin: const EdgeInsets.symmetric(horizontal: 8),
           child: Align(
-            alignment: Alignment.center,
+            alignment: Alignment.bottomCenter,
             child: Material(
               color: Colors.transparent,
               child: Container(

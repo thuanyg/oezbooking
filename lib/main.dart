@@ -1,15 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
-import 'package:oezbooking/core/utils/storage.dart';
+import 'package:oezbooking/core/services/firebase_cloud_message.dart';
+import 'package:oezbooking/core/services/notification_service.dart';
 import 'package:oezbooking/features/events/presentation/bloc/event_bloc.dart';
-import 'package:oezbooking/features/home/presentation/page/home_page.dart';
-import 'package:oezbooking/features/login/data/model/organizer.dart';
 import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
-import 'package:oezbooking/features/login/presentation/page/login_page.dart';
 import 'package:oezbooking/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:oezbooking/features/splash/splash_page.dart';
 import 'package:oezbooking/features/ticket_scanner/presentation/bloc/fetch_ticket_bloc.dart';
@@ -23,6 +20,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   initServiceLocator();
+  await NotificationService.init();
+  final fcm = FirebaseCloudMessage();
+  await fcm.initialize();
   runApp(
     MultiBlocProvider(
       providers: [

@@ -36,6 +36,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             _buildOrderInfo(),
             _buildCustomerInfo(),
             _buildTicketDetails(),
+            const SizedBox(height: 16),
             _buildPaymentInfo(),
             // _buildActionButtons(),
           ],
@@ -276,10 +277,10 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow('Payment Method', 'Credit Card'),
+          _buildInfoRow('Payment Method', 'VNPay'),
           _buildInfoRow(
               'Transaction ID', widget.orderEntity.order.id),
-          _buildInfoRow('Payment Status', 'Completed',
+          _buildInfoRow('Payment Status', widget.orderEntity.order.status,
               valueColor: Colors.green),
         ],
       ),
@@ -359,7 +360,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'confirmed':
+      case 'success':
         return Colors.green;
       case 'pending':
         return Colors.orange;

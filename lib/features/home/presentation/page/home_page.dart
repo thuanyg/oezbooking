@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
@@ -199,7 +200,8 @@ class _HomePageState extends State<HomePage> {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const RevenueAnalyticsPage(),
+                                  builder: (context) =>
+                                      const RevenueAnalyticsPage(),
                                 ));
                           },
                         ),
@@ -237,7 +239,10 @@ class _HomePageState extends State<HomePage> {
                                     const Duration(milliseconds: 800));
                                 final loginBloc =
                                     BlocProvider.of<LoginBloc>(context);
-                                loginBloc.organizer = null;
+
+                                loginBloc.reset();
+
+                                await FirebaseMessaging.instance.deleteToken();
 
                                 await PreferencesUtils.deleteValue(
                                     loginSessionKey);
@@ -291,6 +296,23 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TicketScannerPage(),
+              ));
+        },
+        backgroundColor: AppColors.primaryColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+        child: const Icon(
+          Icons.qr_code_scanner,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 

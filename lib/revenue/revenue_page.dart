@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:oezbooking/core/apps/app_colors.dart';
-import 'package:oezbooking/features/events/data/model/event.dart';
 import 'package:oezbooking/features/login/presentation/bloc/login_bloc.dart';
 import 'package:oezbooking/features/orders/data/model/order.dart';
 import 'package:oezbooking/features/orders/domain/entity/order_entity.dart';
@@ -42,24 +41,27 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
   double _calculateTotalRevenue(List<Order> orders) {
     return orders
         .where((order) =>
-    order.createdAt.toDate().isAfter(_selectedDateRange.start) &&
-        order.createdAt.toDate().isBefore(_selectedDateRange.end))
+            order.createdAt.toDate().isAfter(_selectedDateRange.start) &&
+            order.createdAt.toDate().isBefore(_selectedDateRange.end))
         .map((order) => order.totalPrice * 0.9)
         .fold(0.0, (double a, double b) => a + b);
   }
 
   // Calculate revenue by event type
-  Map<String, double> _calculateRevenueByEventType(List<OrderEntity> orderEntity) {
-    final filteredOrders = orderEntity.where((order) =>
-    order.order.createdAt.toDate().isAfter(_selectedDateRange.start) &&
+  Map<String, double> _calculateRevenueByEventType(
+      List<OrderEntity> orderEntity) {
+    final filteredOrders = orderEntity.where((order) => order.order.status == "success" &&
+        order.order.createdAt.toDate().isAfter(_selectedDateRange.start) &&
         order.order.createdAt.toDate().isBefore(_selectedDateRange.end));
 
     Map<String, double> revenueByEventType = {};
 
     for (var order in filteredOrders) {
-      final event = orderEntity.firstWhere((e) => e.event.id == order.order.eventID);
+      final event =
+          orderEntity.firstWhere((e) => e.event.id == order.order.eventID);
       revenueByEventType[event.event.eventType] =
-          (revenueByEventType[event.event.eventType] ?? 0) + order.order.totalPrice * 0.9;
+          (revenueByEventType[event.event.eventType] ?? 0) +
+              order.order.totalPrice * 0.9;
     }
 
     return revenueByEventType;
@@ -71,28 +73,37 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
 
     for (var order in orderEntity) {
       final orderDate = order.order.createdAt.toDate();
-      if (orderDate.isAfter(_selectedDateRange.start) &&
+      if (orderDate.isAfter(_selectedDateRange.start) && order.order.status == "success" &&
           orderDate.isBefore(_selectedDateRange.end)) {
-        final dateKey = DateTime(orderDate.year, orderDate.month, orderDate.day);
-        dailyRevenue[dateKey] = (dailyRevenue[dateKey] ?? 0) + order.order.totalPrice * .9;
+        final dateKey =
+            DateTime(orderDate.year, orderDate.month, orderDate.day);
+        dailyRevenue[dateKey] =
+            (dailyRevenue[dateKey] ?? 0) + order.order.totalPrice * .9;
       }
     }
 
     return dailyRevenue.entries
-        .map((entry) => FlSpot(entry.key.millisecondsSinceEpoch.toDouble(), entry.value))
+        .map((entry) =>
+            FlSpot(entry.key.millisecondsSinceEpoch.toDouble(), entry.value))
         .toList();
   }
 
   // Calculate additional order statistics
-  Map<String, dynamic> _calculateOrderStatistics(List<OrderEntity> orderEntity) {
-    final filteredOrders = orderEntity.where((order) =>
-    order.order.createdAt.toDate().isAfter(_selectedDateRange.start) &&
-        order.order.createdAt.toDate().isBefore(_selectedDateRange.end)).toList();
+  Map<String, dynamic> _calculateOrderStatistics(
+      List<OrderEntity> orderEntity) {
+    final filteredOrders = orderEntity
+        .where((order) =>
+            order.order.createdAt.toDate().isAfter(_selectedDateRange.start) && order.order.status == "success" &&
+            order.order.createdAt.toDate().isBefore(_selectedDateRange.end))
+        .toList();
 
     return {
       'totalOrders': filteredOrders.length,
       'averageOrderValue': filteredOrders.isNotEmpty
-          ? filteredOrders.map((o) => o.order.totalPrice * .9).fold<double>(0.0, (a, b) => a + b) / filteredOrders.length
+          ? filteredOrders
+                  .map((o) => o.order.totalPrice * .9)
+                  .fold<double>(0.0, (a, b) => a + b) /
+              filteredOrders.length
           : 0.0,
       'mostFrequentEventType': _getMostFrequentEventType(filteredOrders),
       'ordersByDay': _groupOrdersByDay(filteredOrders),
@@ -103,17 +114,21 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
     final eventTypeCounts = <String, int>{};
     for (var order in orders) {
       final event = orders.firstWhere((e) => e.event.id == order.order.eventID);
-      eventTypeCounts[event.event.eventType] = (eventTypeCounts[event.event.eventType] ?? 0) + 1;
+      eventTypeCounts[event.event.eventType] =
+          (eventTypeCounts[event.event.eventType] ?? 0) + 1;
     }
     return eventTypeCounts.isEmpty
         ? 'N/A'
-        : eventTypeCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+        : eventTypeCounts.entries
+            .reduce((a, b) => a.value > b.value ? a : b)
+            .key;
   }
 
   Map<String, int> _groupOrdersByDay(List<OrderEntity> orders) {
     final ordersByDay = <String, int>{};
     for (var order in orders) {
-      final dateKey = DateFormat('yyyy-MM-dd').format(order.order.createdAt.toDate());
+      final dateKey =
+          DateFormat('yyyy-MM-dd').format(order.order.createdAt.toDate());
       ordersByDay[dateKey] = (ordersByDay[dateKey] ?? 0) + 1;
     }
     return ordersByDay;
@@ -169,7 +184,7 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
       body: BlocBuilder(
         bloc: orderBloc,
         builder: (context, state) {
-          if(state is OrderLoading){
+          if (state is OrderLoading) {
             return Center(
               child: Lottie.asset(
                 "assets/animations/loading.json",
@@ -179,12 +194,21 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
             );
           }
 
-          if(state is OrdersLoaded){
-            final order = state.orders.map((o) => o.order).toList();
+          if (state is OrdersLoaded) {
+            final order = state.orders
+                .map((o) => o.order)
+                .where((e) => e.status == "success")
+                .toList();
+
             final totalRevenue = _calculateTotalRevenue(order);
-            final revenueByEventType = _calculateRevenueByEventType(state.orders);
+
+            final revenueByEventType =
+                _calculateRevenueByEventType(state.orders);
+
             final lineChartData = _prepareLineChartData(state.orders);
+
             final orderStats = _calculateOrderStatistics(state.orders);
+            print(lineChartData);
 
             return SingleChildScrollView(
               child: Padding(
@@ -208,7 +232,7 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
                     const SizedBox(height: 20),
 
                     // Daily Revenue Line Chart
-                    _buildDailyRevenueLineChart(lineChartData),
+                    // _buildDailyRevenueLineChart(lineChartData),
                   ],
                 ),
               ),
@@ -253,7 +277,8 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
               ),
               _buildStatisticCard(
                 title: 'Avg. Order Value',
-                value: '\$${orderStats['averageOrderValue'].toStringAsFixed(2)}',
+                value:
+                    '\$${orderStats['averageOrderValue'].toStringAsFixed(2)}',
                 icon: Icons.attach_money,
               ),
               _buildStatisticCard(
@@ -264,7 +289,11 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
               _buildStatisticCard(
                 title: 'Max Daily Orders',
                 value: orderStats['ordersByDay'].values.isNotEmpty
-                    ? orderStats['ordersByDay'].values.cast<int>().reduce((int a, int b) => a > b ? a : b).toString()
+                    ? orderStats['ordersByDay']
+                        .values
+                        .cast<int>()
+                        .reduce((int a, int b) => a > b ? a : b)
+                        .toString()
                     : '0',
                 icon: Icons.bar_chart,
               ),
@@ -372,17 +401,17 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
               PieChartData(
                 sections: revenueByEventType.entries
                     .map((entry) => PieChartSectionData(
-                  color: AppColors.primaryColor.withOpacity(0.7),
-                  value: entry.value,
-                  title:
-                  '${entry.key}\n\$${NumberFormat('#,##0.00').format(entry.value)}',
-                  radius: 74,
-                  titleStyle: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ))
+                          color: AppColors.primaryColor.withOpacity(0.7),
+                          value: entry.value,
+                          title:
+                              '${entry.key}\n\$${NumberFormat('#,##0.00').format(entry.value)}',
+                          radius: 74,
+                          titleStyle: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ))
                     .toList(),
                 centerSpaceRadius: 30,
               ),
@@ -443,7 +472,7 @@ class _RevenueAnalyticsPageState extends State<RevenueAnalyticsPage> {
                       interval: 1,
                       getTitlesWidget: (value, meta) {
                         final date =
-                        DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                            DateTime.fromMillisecondsSinceEpoch(value.toInt());
                         return Text(
                           DateFormat('MM/dd').format(date),
                           style: TextStyle(
