@@ -26,7 +26,7 @@ As an **Organizer**, you will have access to the following features:
   <img src="./screenshots/img_2.png" alt="Organizer App Screenshot" width="300">
   <img src="./screenshots/img_3.png" alt="Organizer App Screenshot" width="300">
   <img src="./screenshots/img_4.png" alt="Organizer App Screenshot" width="300">
-  <img src="./screenshots/img_5png" alt="Organizer App Screenshot" width="300">
+  <img src="./screenshots/img_5.png" alt="Organizer App Screenshot" width="300">
   <img src="./screenshots/img_6.png" alt="Organizer App Screenshot" width="300">
   <img src="./screenshots/img_7.png" alt="Organizer App Screenshot" width="300">
   <img src="./screenshots/img_8.png" alt="Organizer App Screenshot" width="300">
