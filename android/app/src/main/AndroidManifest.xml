@@ -10,7 +10,7 @@
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="oezbooking">
+        android:label="O-EzBooking">
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -38,7 +38,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyA28pHHmRKWXE_Z5jKXtOguTFmUU8i9mtM" />
+            android:value="API_KEY" />
 
         <meta-data
             android:name="flutterEmbedding"
